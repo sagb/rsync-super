@@ -84,7 +84,9 @@ and in the order shown.
   Add `--enable-uid-choice` to allow `LOGIN_UID` to access chroots belonging
   to multiple users, i.e. to allow `TEST_CHROOT_UID` other than `LOGIN_UID`.
 
-  For details about the `update` script, read the header comments [inside](update) it.
+  The `update` script passes its arguments to `configure`, with some caching,
+  allowing it to run periodically without an overhead.
+  For details, read the header comments [inside](update).
   Alternatively, you can manually apply patches from the `patches/` directory
   and copy files from the `src/` directory.
 
