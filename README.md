@@ -70,9 +70,10 @@ and in the order shown.
     It's best to start with an empty directory, belonging to the `TEST_CHROOT_UID`,
     with permissions `700`.
 
-- Prepare a [build environment for rsync](https://github.com/RsyncProject/rsync/blob/master/INSTALL.md)
+- Install [packages](https://github.com/RsyncProject/rsync/blob/master/INSTALL.md)
+  to build rsync.
 
-- Build `rsync-super`:
+- Build rsync-super:
   ```sh
   ./update \
   --with-allowed-uid=$LOGIN_UID \
