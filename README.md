@@ -93,27 +93,27 @@ and in the order shown.
 - Transfer the `rsync` executable to `EXE_PATH` on your rsync server.
 
 - Make it SUID and executable only by the `LOGIN_GID` group:
-```sh
-chown root:$LOGIN_GID $EXE_PATH
-chmod 4750 $EXE_PATH
-```
+  ```sh
+  chown root:$LOGIN_GID $EXE_PATH
+  chmod 4750 $EXE_PATH
+  ```
 
 - Add to `LOGIN_USERNAME`'s `~/.ssh/authorized_keys` (manually replace all variables
 with their values):
-```
-restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR" ssh-rsa TEST_CHROOT_KEY
-```
+  ```
+  restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR" ssh-rsa TEST_CHROOT_KEY
+  ```
   Or, if rsync was configured with `--enable-uid-choice`:
-```
-restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR --chroot-uid TEST_CHROOT_UID --chroot-gid TEST_CHROOT_GID" ssh-rsa TEST_CHROOT_KEY
-```
+  ```
+  restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR --chroot-uid TEST_CHROOT_UID --chroot-gid TEST_CHROOT_GID" ssh-rsa TEST_CHROOT_KEY
+  ```
 
 - That's all. Try to transfer something on behalf of the test customer:
-```sh
-rsync -ve "ssh -i $TEST_CHROOT_PRIVKEY_PATH" test_file $LOGIN_USERNAME@your.server:/
-```
-Note that `LOGIN_USERNAME` is the same for all customers.  
-Note the "/". The file should appear under the customer's chroot.
+  ```sh
+  rsync -ve "ssh -i $TEST_CHROOT_PRIVKEY_PATH" test_file $LOGIN_USERNAME@your.server:/
+  ```
+  Note that `LOGIN_USERNAME` is the same for all customers.  
+  Note the "/". The file should appear under the customer's chroot.
 
 - If something goes wrong, allow `--enable-chroot-verbose` in configure.
   On any failure in chroot code, rsync exits with code 60.
