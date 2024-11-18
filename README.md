@@ -138,8 +138,9 @@ Another explanation is [here](https://github.com/RsyncProject/rsync/discussions/
 
 ## Security Considerations
 
-- Rsync-super starts as an SUID binary, i.e., jumps to **super**user,
-until the early chroot.
+- To perform a chroot operation despite being started by a non-root user,
+rsync-super starts as an SUID binary, elevating to **super**user privileges
+until the early chroot is performed.
 **A user who is allowed to run rsync-super with arbitrary arguments
 potentially has full control over the system.**  
 To partially mitigate this, rsync-super can be run from only
