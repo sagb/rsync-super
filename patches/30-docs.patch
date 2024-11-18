@@ -1,0 +1,72 @@
+diff --git a/rsync.1.md b/rsync.1.md
+index 4407a013..682c8422 100644
+--- a/rsync.1.md
++++ b/rsync.1.md
+@@ -2,6 +2,19 @@
+ 
+ rsync - a fast, versatile, remote (and local) file-copying tool
+ 
++## CAUTION
++
++This is rsync-super, a fork allowing chroot in SSH mode.
++
++It adds six mandatory arguments, which must be specified first and in fixed order:
++
++`--chroot-dir`, `--chroot-uid`, `--chroot-gid`
++
++On startup, rsync immediately and unconditionally performs chroot to the specified
++directory and drops privileges.
++
++You **must** read README.md before using it.
++
+ ## SYNOPSIS
+ 
+ ```
+@@ -415,6 +428,9 @@ has its own detailed description later in this manpage.
+ [comment]: # (Keep these short enough that they'll be under 80 chars when indented by 7 chars.)
+ 
+ ```
++--chroot-dir             perform early chroot (mandatory)
++--chroot-uid             drop privileges to this UID (mandatory)
++--chroot-gid             drop privileges to this GID (mandatory)
+ --verbose, -v            increase verbosity
+ --info=FLAGS             fine-grained informational verbosity
+ --debug=FLAGS            fine-grained debug verbosity
+@@ -596,6 +612,9 @@ variant, even though it must also be specified for the short.  When specifying
+ a parameter, you can either use the form `--option=param`, `--option param`,
+ `-o=param`, `-o param`, or `-oparam` (the latter choices assume that your
+ option has a short variant).
++The exclusion from this rule are `--chroot-dir`, `--chroot-uid` and `--chroot-gid`
++options which are only accepted in the form `--option param`. Also, they must
++be specified first and in fixed order: `--chroot-dir`, `--chroot-uid`, `--chroot-gid`.
+ 
+ The parameter may need to be quoted in some manner for it to survive the
+ shell's command-line parsing.  Also keep in mind that a leading tilde (`~`) in
+@@ -608,6 +627,27 @@ expand it.
+ 
+ [comment]: # (An OL starting at 0 is converted into a DL by the parser.)
+ 
++0.  `--chroot-dir`
++
++    Mandatory. Must be a first argument in the command line, following by
++    an existing directory name.
++    Perform a early chroot into the specified directory.
++    Exit on failure.
++
++0.  `--chroot-uid`
++
++    Mandatory. Must be a third argument in the command line, followed by
++    numeric (decimal) user ID.
++    Perform a setuid to the specified ID.
++    Exit on failure.
++
++0.  `--chroot-gid`
++
++    Mandatory. Must be a fifth argument in the command line, followed by
++    numeric (decimal) group ID.
++    Perform a setgid to the specified ID.
++    Exit on failure.
++
+ 0.  `--help`
+ 
+     Print a short help page describing the options available in rsync and exit.

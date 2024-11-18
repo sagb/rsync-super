@@ -1,0 +1,23 @@
+diff --git a/main.c b/main.c
+index 0c60b86d..a85bb148 100644
+--- a/main.c
++++ b/main.c
+@@ -24,6 +24,7 @@
+ #include "inums.h"
+ #include "ifuncs.h"
+ #include "io.h"
++#include "super.h"
+ #if defined CONFIG_LOCALE && defined HAVE_LOCALE_H
+ #include <locale.h>
+ #endif
+@@ -1709,6 +1710,10 @@ static void unset_env_var(const char *var)
+ 
+ int main(int argc,char *argv[])
+ {
++    if (early_chroot(&argc, &argv) != SUPER_OK) {
++        return SUPER_FAIL;
++    }
++
+ 	int ret;
+ 
+ 	raw_argc = argc;

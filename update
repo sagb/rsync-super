@@ -1,0 +1,86 @@
+#!/bin/sh
+# Search for a new version tag in rsync repository.
+# If found, then apply rsync-super patch and rebuild.
+#
+# Pass all arguments to configure.
+#
+# Designed to run by cron:
+#
+# 1. When called without arguments, use cached configure options.
+# 2. Return 0 when new executable is ready, for the following cron job:
+#    update && custom-install
+# 3. Write to stdout or stderr only on changes, for clean log or email.
+#
+# 'build' directory is used for data caching between 
+# builds (BUILT_TAG_PATH, CF_ARGS_PATH, and the repository).
+#
+set +e
+
+cd "$(dirname $0)"
+TOP="$(pwd)"
+BUILD="$TOP/build"
+SRC="$BUILD/rsync-source"
+REPO="https://github.com/RsyncProject/rsync.git"
+BUILT_TAG_PATH="$BUILD/latest-tag-built"
+CF_ARGS_PATH="$BUILD/configure-args"
+
+
+echo -n "$@" > "${CF_ARGS_PATH}.new"
+if ! diff "${CF_ARGS_PATH}" "${CF_ARGS_PATH}.new" >/dev/null 2>/dev/null ; then
+    if [ -z "$*" ] && [ -s "${CF_ARGS_PATH}" ] ; then
+        #echo "Using cached configure arguments"
+        cf_args_changed=0
+        cf_args=$(cat "$CF_ARGS_PATH")
+    else
+        echo "Using new configure arguments"
+        cf_args_changed=1
+        cf_args="$@"
+    fi
+else
+    #echo "Configure arguments aren't changed"
+    cf_args_changed=0
+    cf_args="$@"
+fi
+rm -f "${CF_ARGS_PATH}.new"
+
+
+[ -d "$BUILD" ] || mkdir "$BUILD"
+if [ -d "$SRC/.git" ] ; then
+    cd "$SRC" && git fetch -q --all && git fetch -q --tags
+else
+    git clone "$REPO" "$SRC" && cd "$SRC"
+fi
+built=$(cat "$BUILT_TAG_PATH" 2>/dev/null || true)
+#echo "built version: $built"
+latest=$(git tag | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+#echo "latest version: $latest"
+
+
+if [ "$latest" '=' "$built" -a "$cf_args_changed" '!=' 1 ] ; then
+    #echo "Nothing to do"
+    exit 1
+fi
+
+
+echo "Building $latest"
+
+git reset --hard && \
+git clean -fd && \
+git checkout "$latest" && \
+rm -f configure.sh || \
+exit 1
+
+for p in ${TOP}/patches/*.patch ; do
+    patch -p1 < "$p" || exit 1
+done
+
+cp -av "$TOP/src/"* "${SRC}/"
+
+./configure $cf_args && \
+make && \
+cp -v rsync "$TOP" && \
+echo "$latest" > "$BUILT_TAG_PATH" && \
+if [ "$cf_args_changed" '=' 1 ] ; then
+    echo -n "$cf_args" > "${CF_ARGS_PATH}"
+fi && \
+exit 0

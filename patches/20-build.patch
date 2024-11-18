@@ -1,0 +1,51 @@
+diff --git a/Makefile.in b/Makefile.in
+index a1253e5d..f76f902c 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -38,7 +38,7 @@ GENFILES=configure.sh aclocal.m4 config.h.in rsync.1 rsync.1.html \
+ 	 rsync-ssl.1 rsync-ssl.1.html rsyncd.conf.5 rsyncd.conf.5.html \
+ 	 @GEN_RRSYNC@
+ HEADERS=byteorder.h config.h errcode.h proto.h rsync.h ifuncs.h itypes.h inums.h \
+-	lib/pool_alloc.h lib/mdigest.h lib/md-defines.h
++	lib/pool_alloc.h lib/mdigest.h lib/md-defines.h super.h
+ LIBOBJ=lib/wildmatch.o lib/compat.o lib/snprintf.o lib/mdfour.o lib/md5.o \
+ 	lib/permstring.o lib/pool_alloc.o lib/sysacls.o lib/sysxattrs.o @LIBOBJS@
+ zlib_OBJS=zlib/deflate.o zlib/inffast.o zlib/inflate.o zlib/inftrees.o \
+@@ -48,10 +48,11 @@ OBJS1=flist.o rsync.o generator.o receiver.o cleanup.o sender.o exclude.o \
+ OBJS2=options.o io.o compat.o hlink.o token.o uidlist.o socket.o hashtable.o \
+ 	usage.o fileio.o batch.o clientname.o chmod.o acls.o xattrs.o
+ OBJS3=progress.o pipe.o @MD5_ASM@ @ROLL_SIMD@ @ROLL_ASM@
++OBJS4=super.o
+ DAEMON_OBJ = params.o loadparm.o clientserver.o access.o connection.o authenticate.o
+ popt_OBJS=popt/findme.o  popt/popt.o  popt/poptconfig.o \
+ 	popt/popthelp.o popt/poptparse.o
+-OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(DAEMON_OBJ) $(LIBOBJ) @BUILD_ZLIB@ @BUILD_POPT@
++OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(OBJS4) $(DAEMON_OBJ) $(LIBOBJ) @BUILD_ZLIB@ @BUILD_POPT@
+ 
+ TLS_OBJ = tls.o syscall.o util2.o t_stub.o lib/compat.o lib/snprintf.o lib/permstring.o lib/sysxattrs.o @BUILD_POPT@
+ 
+diff --git a/configure.ac b/configure.ac
+index ccad7f13..b7de35d8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -238,6 +238,20 @@ fi
+ AC_DEFINE_UNQUOTED(NOBODY_USER, "$NOBODY_USER", [unprivileged user--e.g. nobody])
+ AC_DEFINE_UNQUOTED(NOBODY_GROUP, "$NOBODY_GROUP", [unprivileged group for unprivileged user])
+ 
++AC_ARG_ENABLE([chroot-verbose],
++    [AS_HELP_STRING([--enable-chroot-verbose], [Enable stderr messages from early chroot code])],
++    [if test "x$enable_chroot_verbose" = "xyes"; then
++        AC_DEFINE([SUPER_VERBOSE], [1], [Define to enable early chroot stderr output])
++    fi]
++)
++
++AC_ARG_WITH([allowed-uid],
++    [AS_HELP_STRING([--with-allowed-uid=UID], [Numeric user ID allowed to run rsync])])
++case "$with_allowed_uid" in
++    '') AC_MSG_ERROR([You must specify --with-allowed-uid.]) ;;
++    *) AC_DEFINE_UNQUOTED([SUPER_SSH_UID], [$with_allowed_uid], [Define to the allowed UID]) ;;
++esac
++
+ # rolling-checksum SIMD optimizations
+ ROLL_SIMD=
+ 
