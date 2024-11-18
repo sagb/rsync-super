@@ -19,6 +19,7 @@ void super_fprintf(const char *format __attribute__((unused)), ...)
 #endif
 }
 
+#ifdef SUPER_UID_CHOICE
 int str_to_id(const char *arg, uid_t *res)
 {
     char *endptr;
@@ -30,11 +31,12 @@ int str_to_id(const char *arg, uid_t *res)
     }
     *res = (uid_t)id_long;
     if (*res < SUPER_MIN_UID) {
-        super_fprintf("UID or GID must be greater or equal than 1000\n");
+        super_fprintf("UID or GID must be greater or equal than %d\n", SUPER_MIN_UID);
         return -1;
     }
     return 0;
 }
+#endif
 
 int early_chroot(int *argc_ptr, char **argv_ptr[])
 {
@@ -57,12 +59,17 @@ int early_chroot(int *argc_ptr, char **argv_ptr[])
         super_fprintf("Insufficient argument count\n");
         return SUPER_FAIL;
     }
-    if (strcmp((*argv_ptr)[1], "--chroot-dir") != 0 ||
-            strcmp((*argv_ptr)[3], "--chroot-uid") != 0 ||
+    if (strcmp((*argv_ptr)[1], "--chroot-dir") != 0 ) {
+        super_fprintf("Incorrect sequence of arguments\n");
+        return SUPER_FAIL;
+    }
+#ifdef SUPER_UID_CHOICE
+    if (strcmp((*argv_ptr)[3], "--chroot-uid") != 0 ||
             strcmp((*argv_ptr)[5], "--chroot-gid") != 0) {
         super_fprintf("Incorrect sequence of arguments\n");
         return SUPER_FAIL;
     }
+#endif
 
     chroot_dir = strdup((*argv_ptr)[2]);
     if (!(stat(chroot_dir, &c_info) == 0 && (c_info.st_mode & S_IFDIR))) {
@@ -70,12 +77,17 @@ int early_chroot(int *argc_ptr, char **argv_ptr[])
         return SUPER_FAIL;
     }
 
+#ifdef SUPER_UID_CHOICE
     if (str_to_id((*argv_ptr)[4], &chroot_uid) != 0) {
         return SUPER_FAIL;
     }
     if (str_to_id((*argv_ptr)[6], &chroot_gid) != 0) {
         return SUPER_FAIL;
     }
+#else
+    chroot_uid = current_uid;
+    chroot_gid = getgid();
+#endif
 
     if (chdir(chroot_dir) != 0) {
         super_fprintf("chdir: %s\n", strerror(errno));

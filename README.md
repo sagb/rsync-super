@@ -4,19 +4,34 @@
 
 ### An rsync patch allowing chroot in SSH (non-daemon) mode.
 
-It adds six **mandatory** arguments, which must be specified first and in fixed order:
+This patch introduces a **mandatory** argument that must be specified first:
 
-```sh
+```
 rsync \
---chroot-dir directory \
---chroot-uid numeric_user_id \
---chroot-gid numeric_group_id
+--chroot-dir <directory>
 ```
 
-On startup, rsync immediately and unconditionally changes the root to the specified
-directory and drops privileges.
+Upon startup, rsync immediately and unconditionally changes the root to the
+specified directory and drops privileges.
 
 On failure to do that, it exits.
+
+Only the user ID specified by the `--with-allowed-uid` configure option
+is permitted to run rsync.
+
+This restriction also applies to the _final_ UID within the chroot environment.
+
+However, if rsync is configured with `--enable-uid-choice`, the following
+additional runtime options become available, allowing the user to impersonate
+other users:
+
+```
+--chroot-uid <numeric_user_id> \
+--chroot-gid <numeric_group_id>
+```
+
+They must be specified immediately after `--chroot-dir <directory>`
+and in the order shown.
 
 
 ## Usage
@@ -42,7 +57,8 @@ On failure to do that, it exits.
   + `EXE_PATH`: a path to the rsync executable.
 
   + `TEST_CHROOT_UID`: user ID of one of your real users, let's say "customers".
-    They may be all the same as `LOGIN_UID`, but may be different as well.
+    They may be all the same as `LOGIN_UID`, but may be different as well,
+    if rsync was built with `--enable-uid-choice`.
 
   + `TEST_CHROOT_GID`: group ID of the aforementioned customer.
 
@@ -51,7 +67,7 @@ On failure to do that, it exits.
   + `TEST_CHROOT_PRIVKEY_PATH`: a path to the corresponding private key.
 
   + `TEST_CHROOT_DIR`: a chroot area for the aforementioned customer.
-    It's best to start with an empty directory, belonging to the user,
+    It's best to start with an empty directory, belonging to the `TEST_CHROOT_UID`,
     with permissions `700`.
 
 - Prepare a [build environment for rsync](https://github.com/RsyncProject/rsync/blob/master/INSTALL.md)
@@ -64,6 +80,9 @@ On failure to do that, it exits.
   ...other-configure-options-for-rsync...
   ```
   Skip `--enable-chroot-verbose` in production.
+
+  Add `--enable-uid-choice` to allow `LOGIN_UID` to access chroots belonging
+  to multiple users, i.e. to allow `TEST_CHROOT_UID` other than `LOGIN_UID`.
 
   For details about the `update` script, read the header comments [inside](update) it.
   Alternatively, you can manually apply patches from the `patches/` directory
@@ -79,6 +98,10 @@ chmod 4750 $EXE_PATH
 
 - Add to `LOGIN_USERNAME`'s `~/.ssh/authorized_keys` (manually replace all variables
 with their values):
+```
+restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR" ssh-rsa TEST_CHROOT_KEY
+```
+  Or, if rsync was configured with `--enable-uid-choice`:
 ```
 restrict,command="EXE_PATH --chroot-dir TEST_CHROOT_DIR --chroot-uid TEST_CHROOT_UID --chroot-gid TEST_CHROOT_GID" ssh-rsa TEST_CHROOT_KEY
 ```
@@ -113,11 +136,13 @@ Another explanation is [here](https://github.com/RsyncProject/rsync/discussions/
 
 ## Security Considerations
 
-- Rsync-super starts as an SUID binary, i.e., jumps to **super**user, until the early chroot.
-**Any user who is allowed to run rsync-super with arbitrary arguments
-has full control over the system.**  
-To partially mitigate this, rsync-super accepts only a single `LOGIN_UID`
-and refuses `--chroot-uid` or `--chroot-gid` of less than 1000.  
+- Rsync-super starts as an SUID binary, i.e., jumps to **super**user,
+until the early chroot.
+**A user who is allowed to run rsync-super with arbitrary arguments
+potentially has full control over the system.**  
+To partially mitigate this, rsync-super can be run from only
+a single `LOGIN_UID` hardcoded at build time,
+and it refuses `--chroot-uid` or `--chroot-gid` values less than 1000.  
 Try hard to prevent `LOGIN_UID` from running arbitrary commands,
 i.e., from escaping `.authorized_keys` restrictions.
 

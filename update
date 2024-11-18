@@ -25,6 +25,7 @@ BUILT_TAG_PATH="$BUILD/latest-tag-built"
 CF_ARGS_PATH="$BUILD/configure-args"
 
 
+[ -d "$BUILD" ] || mkdir "$BUILD"
 echo -n "$@" > "${CF_ARGS_PATH}.new"
 if ! diff "${CF_ARGS_PATH}" "${CF_ARGS_PATH}.new" >/dev/null 2>/dev/null ; then
     if [ -z "$*" ] && [ -s "${CF_ARGS_PATH}" ] ; then
@@ -44,7 +45,6 @@ fi
 rm -f "${CF_ARGS_PATH}.new"
 
 
-[ -d "$BUILD" ] || mkdir "$BUILD"
 if [ -d "$SRC/.git" ] ; then
     cd "$SRC" && git fetch -q --all && git fetch -q --tags
 else
@@ -78,9 +78,9 @@ cp -av "$TOP/src/"* "${SRC}/"
 
 ./configure $cf_args && \
 make && \
-cp -v rsync "$TOP" && \
 echo "$latest" > "$BUILT_TAG_PATH" && \
 if [ "$cf_args_changed" '=' 1 ] ; then
     echo -n "$cf_args" > "${CF_ARGS_PATH}"
 fi && \
+echo "$SRC/rsync is built." && \
 exit 0

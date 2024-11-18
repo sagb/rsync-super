@@ -25,10 +25,10 @@ index a1253e5d..f76f902c 100644
  TLS_OBJ = tls.o syscall.o util2.o t_stub.o lib/compat.o lib/snprintf.o lib/permstring.o lib/sysxattrs.o @BUILD_POPT@
  
 diff --git a/configure.ac b/configure.ac
-index ccad7f13..b7de35d8 100644
+index ccad7f13..bc024140 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -238,6 +238,20 @@ fi
+@@ -238,6 +238,27 @@ fi
  AC_DEFINE_UNQUOTED(NOBODY_USER, "$NOBODY_USER", [unprivileged user--e.g. nobody])
  AC_DEFINE_UNQUOTED(NOBODY_GROUP, "$NOBODY_GROUP", [unprivileged group for unprivileged user])
  
@@ -45,6 +45,13 @@ index ccad7f13..b7de35d8 100644
 +    '') AC_MSG_ERROR([You must specify --with-allowed-uid.]) ;;
 +    *) AC_DEFINE_UNQUOTED([SUPER_SSH_UID], [$with_allowed_uid], [Define to the allowed UID]) ;;
 +esac
++
++AC_ARG_ENABLE([uid-choice],
++    [AS_HELP_STRING([--enable-uid-choice], [Enable choice of UID and GID in chroot via CLI arguments])],
++    [if test "x$enable_uid_choice" = "xyes"; then
++        AC_DEFINE([SUPER_UID_CHOICE], [1], [Define to enable choice of UID and GID in chroot via CLI arguments])
++    fi]
++)
 +
  # rolling-checksum SIMD optimizations
  ROLL_SIMD=
