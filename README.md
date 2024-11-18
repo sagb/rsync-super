@@ -73,7 +73,7 @@ and in the order shown.
 - Install [packages](https://github.com/RsyncProject/rsync/blob/master/INSTALL.md)
   to build rsync.
 
-- Download and build it using the `update` script:
+- Run the `update` script to download and build rsync:
   ```sh
   ./update \
   --with-allowed-uid=$LOGIN_UID \
