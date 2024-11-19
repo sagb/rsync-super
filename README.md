@@ -171,9 +171,9 @@ a great risk that they will be able to impersonate each other.
 
 - The patch is kept clean, minimal, and well understood.  
 
-- The `update` script is intended to be run by cron for automatically 
-  applying new upstream rsync versions. In contrast, no automation 
-  is recommended for updating rsync-super patch.
+- The `update` script is intended to be run by cron to automatically
+  apply new upstream rsync versions. You can precede this cron job
+  with an update of the rsync-super patch itself.
 
 
 ## Miscelaneous
